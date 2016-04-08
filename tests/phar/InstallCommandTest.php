@@ -5,7 +5,7 @@ class InstallCommandTest extends PharTestCase {
 
     public function testInstallsPhar() {
         $this->changeWorkingDirectory(__DIR__ . '/tmp');
-        $result = $this->runPhiveCommand('install', ['phpunit'], ['temporary']);
+        $this->runPhiveCommand('install', ['phpunit']);
 
         $this->assertFileExists(__DIR__ .'/tmp/tools/phpunit');
     }

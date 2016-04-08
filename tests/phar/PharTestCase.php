@@ -6,21 +6,14 @@ class PharTestCase extends \PHPUnit_Framework_TestCase {
     private $pharSize = 0;
 
     final protected function setUp() {
-        copy($this->getPharFilename(), $this->getTestedPharFilename());
-        chmod($this->getTestedPharFilename(), 0777);
-        $this->pharSize = filesize($this->getTestedPharFilename());
-
-        if (!file_exists(__DIR__ . '/tmp')) {
-            mkdir(__DIR__ . '/tmp');
-        }
+        $this->createCopyOfPharUnderTest();
+        $this->createTemporaryDirectory();
         $this->_setUp();
     }
 
     final protected function tearDown() {
-        if (file_exists(__DIR__ . '/tmp')) {
-            $this->removeDirectory(__DIR__ . '/tmp');
-        }
-        $this->assertPharIsUnchanged();
+        $this->removeTemporaryDirectory();
+        $this->ensurePharIsUnchanged();
         unlink($this->getTestedPharFilename());
         $this->_tearDown();
     }
@@ -84,9 +77,9 @@ class PharTestCase extends \PHPUnit_Framework_TestCase {
         return;
     }
 
-    private function assertPharIsUnchanged() {
+    private function ensurePharIsUnchanged() {
         if ($this->pharSize !== filesize($this->getTestedPharFilename())) {
-            $this->fail('PHAR was changed during the test!');
+            $this->fail('The PHAR under test was changed during the test!');
         }
     }
 
@@ -102,6 +95,25 @@ class PharTestCase extends \PHPUnit_Framework_TestCase {
      */
     private function getPharFilename() {
         return glob(__DIR__ . '/../../build/phar/*.phar')[0];
+    }
+
+    private function createTemporaryDirectory() {
+        if (!file_exists(__DIR__ . '/tmp')) {
+            mkdir(__DIR__ . '/tmp');
+        }
+    }
+
+    private function removeTemporaryDirectory() {
+        if (file_exists(__DIR__ . '/tmp')) {
+            $this->removeDirectory(__DIR__ . '/tmp');
+        }
+    }
+
+    private function createCopyOfPharUnderTest() {
+        $testedPharFilename = $this->getTestedPharFilename();
+        copy($this->getPharFilename(), $testedPharFilename);
+        chmod($testedPharFilename, 0777);
+        $this->pharSize = filesize($testedPharFilename);
     }
 
 }
