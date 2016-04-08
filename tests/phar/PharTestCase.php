@@ -3,7 +3,11 @@ namespace PharIo\Phive\PharRegressionTests;
 
 class PharTestCase extends \PHPUnit_Framework_TestCase {
 
+    private $pharSize = 0;
+
     final protected function setUp() {
+        $this->pharSize = filesize(PHAR_FILENAME);
+
         if (!file_exists(__DIR__ . '/tmp')) {
             mkdir(__DIR__ . '/tmp');
         }
@@ -14,6 +18,7 @@ class PharTestCase extends \PHPUnit_Framework_TestCase {
         if (file_exists(__DIR__ . '/tmp')) {
             $this->removeDirectory(__DIR__ . '/tmp');
         }
+        $this->assertPharIsUnchanged();
         $this->_tearDown();
     }
 
@@ -74,5 +79,11 @@ class PharTestCase extends \PHPUnit_Framework_TestCase {
         rmdir($path);
 
         return;
+    }
+
+    private function assertPharIsUnchanged() {
+        if ($this->pharSize !== filesize(PHAR_FILENAME)) {
+            $this->fail('PHAR was changed during the test!');
+        }
     }
 }

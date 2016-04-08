@@ -3,7 +3,8 @@
          backupStaticAttributes="false"
          verbose="true"
          bootstrap="tests/phar/bootstrap.php"
-         forceCoversAnnotation="true">
+         forceCoversAnnotation="true"
+         stopOnFailure="true">
 
     <testsuites>
         <testsuite name="Phive">
