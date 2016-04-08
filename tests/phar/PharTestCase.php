@@ -6,7 +6,9 @@ class PharTestCase extends \PHPUnit_Framework_TestCase {
     private $pharSize = 0;
 
     final protected function setUp() {
-        $this->pharSize = filesize(PHAR_FILENAME);
+        copy($this->getPharFilename(), $this->getTestedPharFilename());
+        chmod($this->getTestedPharFilename(), 0777);
+        $this->pharSize = filesize($this->getTestedPharFilename());
 
         if (!file_exists(__DIR__ . '/tmp')) {
             mkdir(__DIR__ . '/tmp');
@@ -19,6 +21,7 @@ class PharTestCase extends \PHPUnit_Framework_TestCase {
             $this->removeDirectory(__DIR__ . '/tmp');
         }
         $this->assertPharIsUnchanged();
+        unlink($this->getTestedPharFilename());
         $this->_tearDown();
     }
 
@@ -45,7 +48,7 @@ class PharTestCase extends \PHPUnit_Framework_TestCase {
      * @return mixed
      */
     protected function runPhiveCommand($command, array $arguments = [], array $switches = []) {
-        $call = PHAR_FILENAME . ' ' . $command;
+        $call = $this->getTestedPharFilename() . ' ' . $command;
         foreach ($switches as $switch) {
             $call .= ' -' . $switch;
         }
@@ -82,8 +85,23 @@ class PharTestCase extends \PHPUnit_Framework_TestCase {
     }
 
     private function assertPharIsUnchanged() {
-        if ($this->pharSize !== filesize(PHAR_FILENAME)) {
+        if ($this->pharSize !== filesize($this->getTestedPharFilename())) {
             $this->fail('PHAR was changed during the test!');
         }
     }
+
+    /**
+     * @return string
+     */
+    private function getTestedPharFilename() {
+        return __DIR__  . '/under-test.php';
+    }
+
+    /**
+     * @return string
+     */
+    private function getPharFilename() {
+        return glob(__DIR__ . '/../../build/phar/*.phar')[0];
+    }
+
 }
