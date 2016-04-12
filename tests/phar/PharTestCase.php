@@ -1,9 +1,22 @@
 <?php
 namespace PharIo\Phive\PharRegressionTests;
 
+use PharIo\Phive\Directory;
+use PharIo\Phive\File;
+use PharIo\Phive\Filename;
+use PharIo\Phive\Phar;
+use PharIo\Phive\PharRegistry;
+use PharIo\Phive\Version;
+use PharIo\Phive\XmlFile;
+
 class PharTestCase extends \PHPUnit_Framework_TestCase {
 
     private $pharSize = 0;
+
+    /**
+     * @var PharRegistry
+     */
+    private $registry;
 
     final protected function setUp() {
         $this->createCopyOfPharUnderTest();
@@ -65,6 +78,12 @@ class PharTestCase extends \PHPUnit_Framework_TestCase {
         return $output;
     }
 
+    protected function addPharToRegistry($name, $version, $filename) {
+        $this->getPharRegistry()->addPhar(
+            new Phar($name, new Version($version), new File(new Filename($filename), 'foo'))
+        );
+    }
+
     /**
      * @param $path
      */
@@ -117,4 +136,20 @@ class PharTestCase extends \PHPUnit_Framework_TestCase {
         $this->pharSize = filesize($testedPharFilename);
     }
 
+    /**
+     * @return PharRegistry
+     */
+    private function getPharRegistry() {
+        if (null === $this->registry) {
+            $xmlFilename = __DIR__ . '/fixtures/phive-home/phars.xml';
+            if (file_exists($xmlFilename)) {
+                unlink($xmlFilename);
+            }
+            $this->registry = new PharRegistry(
+                new XmlFile(new Filename($xmlFilename), 'https://phar.io/phive/installdb', 'phars'),
+                new Directory(__DIR__ . '/fixtures/phive-home/phars')
+            );
+        }
+        return $this->registry;
+    }
 }
