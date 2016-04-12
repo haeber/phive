@@ -42,6 +42,7 @@ class PharTestCase extends \PHPUnit_Framework_TestCase {
      */
     protected function runPhiveCommand($command, array $arguments = [], array $switches = []) {
         $call = $this->getPharUnderTestFilename() . ' ' . $command;
+        $call .= ' --home=' . __DIR__ . '/fixtures/phive-home';
         foreach ($switches as $switch) {
             $call .= ' -' . $switch;
         }

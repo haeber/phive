@@ -1,14 +1,6 @@
 <?php
-
+require __DIR__ . '/../../src/autoload.php';
+require __DIR__ . '/PharTestBootstrap.php';
 require __DIR__ . '/PharTestCase.php';
 
-echo "Building PHAR... \n";
-
-chdir(__DIR__ . '/../..');
-@exec('ant phar', $output ,$returnCode);
-if ($returnCode !== 0) {
-    throw new RuntimeException('Could not build PHAR');
-}
-
-$filename = glob(__DIR__ . '/../../build/phar/*.phar')[0];
-echo sprintf("Using PHAR %s for the test run. \n\n", $filename);
+(new \PharIo\Phive\PharTestBootstrap())->run();
