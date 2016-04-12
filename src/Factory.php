@@ -16,9 +16,16 @@ class Factory {
     private $version;
 
     /**
+     * @var Cli\Request
+     */
+    private $request;
+
+    /**
+     * @param Cli\Request $request
      * @param PhiveVersion $version
      */
-    public function __construct(PhiveVersion $version = null) {
+    public function __construct(Cli\Request $request, PhiveVersion $version = null) {
+        $this->request = $request;
         $this->version = $version;
     }
 
@@ -30,7 +37,136 @@ class Factory {
             $this->getCommandLocator(),
             $this->getConsoleOutput(),
             $this->getPhiveVersion(),
+            $this->getEnvironment(),
+            $this->request
+        );
+    }
+
+    /**
+     * @return VersionCommand
+     */
+    public function getVersionCommand() {
+        return new VersionCommand;
+    }
+
+    /**
+     * @return HelpCommand
+     */
+    public function getHelpCommand() {
+        return new HelpCommand(
+            $this->getEnvironment(),
+            $this->getConsoleOutput()
+        );
+    }
+
+    /**
+     * @return SkelCommand
+     */
+    public function getSkelCommand() {
+        return new SkelCommand(
+            new SkelCommandConfig($this->request->getCommandOptions(), getcwd()),
+            $this->getPhiveVersion()
+        );
+    }
+
+    /**
+     * @return UpdateRepositoryListCommand
+     */
+    public function getUpdateRepositoryListCommand() {
+        return new UpdateRepositoryListCommand($this->getPharIoRepositoryListFileLoader());
+    }
+
+    /**
+     * @return RemoveCommand
+     */
+    public function getRemoveCommand() {
+        return new RemoveCommand(
+            new RemoveCommandConfig($this->request->getCommandOptions(), $this->getConfig()),
+            $this->getPharRegistry(),
+            $this->getPharService(),
+            $this->getColoredConsoleOutput()
+        );
+    }
+
+    /**
+     * @return ResetCommand
+     */
+    public function getResetCommand() {
+        return new ResetCommand(
+            new ResetCommandConfig($this->request->getCommandOptions()),
+            $this->getPharRegistry(),
+            $this->getEnvironment(),
+            $this->getPharInstaller()
+        );
+    }
+
+    /**
+     * @return InstallCommand
+     */
+    public function getInstallCommand() {
+        return new InstallCommand(
+            new InstallCommandConfig(
+                $this->request->getCommandOptions(),
+                $this->getConfig(),
+                $this->getPhiveXmlConfig()
+            ),
+            $this->getPharService(),
+            $this->getPhiveXmlConfig(),
             $this->getEnvironment()
+        );
+    }
+
+    /**
+     * @return UpdateCommand
+     */
+    public function getUpdateCommand() {
+        return new UpdateCommand(
+            new UpdateCommandConfig(
+                $this->request->getCommandOptions(),
+                $this->getConfig(),
+                $this->getPhiveXmlConfig()
+            ),
+            $this->getPharService(),
+            $this->getPhiveXmlConfig()
+        );
+    }
+
+    /**
+     * @return ListCommand
+     */
+    public function getListCommand() {
+        return new ListCommand(
+            $this->getSourcesList(),
+            $this->getColoredConsoleOutput()
+        );
+    }
+
+    /**
+     * @return PurgeCommand
+     */
+    public function getPurgeCommand() {
+        return new PurgeCommand(
+            new PurgeCommandConfig(
+                $this->request->getCommandOptions(),
+                $this->getConfig()
+            ),
+            $this->getPharRegistry(),
+            $this->getColoredConsoleOutput()
+        );
+    }
+
+    public function getComposerCommand() {
+        return new ComposerCommand(
+            new ComposerCommandConfig(
+                $this->request->getCommandOptions(),
+                $this->getConfig(),
+                $this->getPhiveXmlConfig()
+            ),
+            $this->getComposerService(),
+            $this->getPharService(),
+            $this->getPhiveXmlConfig(),
+            $this->getEnvironment(),
+            $this->getConsoleInput()
         );
     }
 
@@ -42,10 +178,10 @@ class Factory {
     }
 
     /**
-     * @return VersionCommand
+     * @return Cli\Output
      */
-    public function getVersionCommand() {
-        return new VersionCommand;
+    private function getConsoleOutput() {
+        return new Cli\ColoredConsoleOutput(Cli\ConsoleOutput::VERBOSE_INFO);
     }
 
     /**
@@ -66,46 +202,10 @@ class Factory {
     }
 
     /**
-     * @return Cli\Output
-     */
-    private function getConsoleOutput() {
-        return new Cli\ColoredConsoleOutput(Cli\ConsoleOutput::VERBOSE_INFO);
-    }
-
-    /**
-     * @return HelpCommand
-     */
-    public function getHelpCommand() {
-        return new HelpCommand(
-            $this->getEnvironment(),
-            $this->getConsoleOutput()
-        );
-    }
-
-    /**
      * @return Environment
      */
     private function getEnvironment() {
         return Environment::fromSuperGlobals();
-    }
-
-    /**
-     * @param Cli\Options $options
-     *
-     * @return SkelCommand
-     */
-    public function getSkelCommand(Cli\Options $options) {
-        return new SkelCommand(
-            new SkelCommandConfig($options, getcwd()),
-            $this->getPhiveVersion()
-        );
-    }
-
-    /**
-     * @return UpdateRepositoryListCommand
-     */
-    public function getUpdateRepositoryListCommand() {
-        return new UpdateRepositoryListCommand($this->getPharIoRepositoryListFileLoader());
     }
 
     /**
@@ -125,20 +225,8 @@ class Factory {
      */
     private function getConfig() {
         return new Config(
-            $this->getEnvironment()
-        );
-    }
-
-    /**
-     * @return PhiveXmlConfig
-     */
-    private function getPhiveXmlConfig() {
-        return new PhiveXmlConfig(
-            new XmlFile(
-                $this->getEnvironment()->getWorkingDirectory()->file('phive.xml'),
-                'https://phar.io/phive',
-                'phive'
-            )
+            $this->getEnvironment(),
+            $this->request->getCommandOptions()
         );
     }
 
@@ -181,20 +269,6 @@ class Factory {
     }
 
     /**
-     * @param Cli\Options $options
-     *
-     * @return RemoveCommand
-     */
-    public function getRemoveCommand(Cli\Options $options) {
-        return new RemoveCommand(
-            new RemoveCommandConfig($options, $this->getConfig()),
-            $this->getPharRegistry(),
-            $this->getPharService(),
-            $this->getColoredConsoleOutput()
-        );
-    }
-
-    /**
      * @return PharRegistry
      */
     private function getPharRegistry() {
@@ -211,7 +285,7 @@ class Factory {
     /**
      * @return PharService
      */
-    public function getPharService() {
+    private function getPharService() {
         return new PharService(
             $this->getPharDownloader(),
             $this->getPharInstaller(),
@@ -236,29 +310,15 @@ class Factory {
     /**
      * @return SignatureService
      */
-    public function getSignatureService() {
+    private function getSignatureService() {
         return new SignatureService($this->getGnupgSignatureVerifier());
     }
 
     /**
      * @return SignatureVerifier
      */
-    public function getGnupgSignatureVerifier() {
+    private function getGnupgSignatureVerifier() {
         return new GnupgSignatureVerifier($this->getGnupg(), $this->getKeyService());
-    }
-
-    /**
-     * @param Cli\Options $options
-     *
-     * @return ResetCommand
-     */
-    public function getResetCommand(Cli\Options $options) {
-        return new ResetCommand(
-            new ResetCommandConfig($options),
-            $this->getPharRegistry(),
-            $this->getEnvironment(),
-            $this->getPharInstaller()
-        );
     }
 
     /**
@@ -285,7 +345,7 @@ class Factory {
     /**
      * @return KeyService
      */
-    public function getKeyService() {
+    private function getKeyService() {
         return new KeyService(
             $this->getPgpKeyDownloader(),
             $this->getGnupgKeyImporter(),
@@ -347,74 +407,6 @@ class Factory {
     }
 
     /**
-     * @return SourceRepositoryLoader
-     */
-    private function getPharIoRepositoryFactory() {
-        return new SourceRepositoryLoader($this->getFileDownloader());
-    }
-
-    /**
-     * @param Cli\Options $options
-     *
-     * @return InstallCommand
-     */
-    public function getInstallCommand(Cli\Options $options) {
-        return new InstallCommand(
-            new InstallCommandConfig(
-                $options,
-                $this->getConfig(),
-                $this->getPhiveXmlConfig()
-            ),
-            $this->getPharService(),
-            $this->getPhiveXmlConfig(),
-            $this->getEnvironment()
-        );
-    }
-
-    /**
-     * @param Cli\Options $options
-     *
-     * @return UpdateCommand
-     */
-    public function getUpdateCommand(Cli\Options $options) {
-        return new UpdateCommand(
-            new UpdateCommandConfig(
-                $options,
-                $this->getConfig(),
-                $this->getPhiveXmlConfig()
-            ),
-            $this->getPharService(),
-            $this->getPhiveXmlConfig()
-        );
-    }
-
-    /**
-     * @return ListCommand
-     */
-    public function getListCommand() {
-        return new ListCommand(
-            $this->getSourcesList(),
-            $this->getColoredConsoleOutput()
-        );
-    }
-
-    /**
-     * @param Cli\Options $options
-     *
-     * @return PurgeCommand
-     */
-    public function getPurgeCommand(Cli\Options $options) {
-        return new PurgeCommand(
-            new PurgeCommandConfig(
-                $options,
-                $this->getConfig()
-            ),
-            $this->getPharRegistry(),
-            $this->getColoredConsoleOutput()
-        );
-    }
-
-    /**
      * @return SourcesList
      */
     private function getSourcesList() {
@@ -427,18 +419,23 @@ class Factory {
         );
     }
 
-    public function getComposerCommand(Cli\Options $options) {
-        return new ComposerCommand(
-            new ComposerCommandConfig(
-                $options,
-                $this->getConfig(),
-                $this->getPhiveXmlConfig()
-            ),
-            $this->getComposerService(),
-            $this->getPharService(),
-            $this->getPhiveXmlConfig(),
-            $this->getEnvironment(),
-            $this->getConsoleInput()
+    /**
+     * @return SourceRepositoryLoader
+     */
+    private function getPharIoRepositoryFactory() {
+        return new SourceRepositoryLoader($this->getFileDownloader());
+    }
+
+    /**
+     * @return PhiveXmlConfig
+     */
+    private function getPhiveXmlConfig() {
+        return new PhiveXmlConfig(
+            new XmlFile(
+                $this->getEnvironment()->getWorkingDirectory()->file('phive.xml'),
+                'https://phar.io/phive',
+                'phive'
+            )
         );
     }
 
