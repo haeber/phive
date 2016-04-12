@@ -225,7 +225,8 @@ class Factory {
      */
     private function getConfig() {
         return new Config(
-            $this->getEnvironment()
+            $this->getEnvironment(),
+            $this->request->getCommandOptions()
         );
     }
 
