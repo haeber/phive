@@ -21,7 +21,7 @@ class Factory {
     private $request;
 
     /**
-     * @param Cli\Request $request
+     * @param Cli\Request  $request
      * @param PhiveVersion $version
      */
     public function __construct(Cli\Request $request, PhiveVersion $version = null) {
@@ -81,9 +81,7 @@ class Factory {
      */
     public function getRemoveCommand() {
         return new RemoveCommand(
-            new RemoveCommandConfig(
-                $this->request->getCommandOptions(), $this->getConfig(), $this->getPhiveXmlConfig()
-            ),
+            new RemoveCommandConfig($this->request->getCommandOptions(), $this->getTargetDirectoryLocator()),
             $this->getPharRegistry(),
             $this->getPharService(),
             $this->getColoredConsoleOutput()
@@ -108,9 +106,7 @@ class Factory {
     public function getInstallCommand() {
         return new InstallCommand(
             new InstallCommandConfig(
-                $this->request->getCommandOptions(),
-                $this->getConfig(),
-                $this->getPhiveXmlConfig()
+                $this->request->getCommandOptions(), $this->getPhiveXmlConfig(), $this->getTargetDirectoryLocator()
             ),
             $this->getPharService(),
             $this->getPhiveXmlConfig(),
@@ -170,6 +166,14 @@ class Factory {
             $this->getEnvironment(),
             $this->getConsoleInput()
         );
+    }
+
+    /**
+     * @return TargetDirectoryLocator
+     */
+    private function getTargetDirectoryLocator()
+    {
+        return new TargetDirectoryLocator($this->getConfig(), $this->getPhiveXmlConfig(), $this->request->getCommandOptions());
     }
 
     /**
@@ -292,7 +296,7 @@ class Factory {
             $this->getPharDownloader(),
             $this->getPharInstaller(),
             $this->getPharRegistry(),
-            $this->getAliasResolver(),
+            $this->getAliasResolverService(),
             $this->getColoredConsoleOutput(),
             $this->getPharIoRepositoryFactory()
         );
@@ -393,11 +397,10 @@ class Factory {
     }
 
     /**
-     * @return AliasResolver
+     * @return PharIoAliasResolver
      */
-    private function getAliasResolver() {
-
-        return new AliasResolver(
+    private function getPharIoAliasResolver() {
+        return new PharIoAliasResolver(
             $this->getSourcesList()
         );
     }
@@ -437,6 +440,24 @@ class Factory {
 
     private function getComposerService() {
         return new ComposerService($this->getSourcesList());
+    }
+
+    private function getAliasResolverService() {
+        $service = new AliasResolverService();
+
+        $service->addResolver(
+            $this->getGithubAliasResolver()
+        );
+
+        $service->addResolver(
+            $this->getPharIoAliasResolver()
+        );
+
+        return $service;
+    }
+
+    private function getGithubAliasResolver() {
+        return new GithubAliasResolver($this->getCurl());
     }
 
 }
