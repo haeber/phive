@@ -37,6 +37,13 @@ class PharRegistry {
         $hashNode = $this->dbFile->createElement('hash', $phar->getFile()->getSha1Hash()->asString());
         $hashNode->setAttribute('type', 'sha1');
         $pharNode->appendChild($hashNode);
+
+        if ($phar->hasSignatureFingerprint()) {
+            $signatureNode = $this->dbFile->createElement('signature');
+            $signatureNode->setAttribute('fingerprint', $phar->getSignatureFingerprint());
+            $pharNode->appendChild($signatureNode);
+        }
+
         $this->dbFile->addElement($pharNode);
         $this->dbFile->save();
     }
@@ -213,6 +220,23 @@ class PharRegistry {
         }
 
         return $usedPhars;
+    }
+
+    /**
+     * @param string $alias
+     *
+     * @return array
+     */
+    public function getKnownSignatureFingerprints($alias) {
+        $fingerprints = [];
+        $query = sprintf('//phive:phar[@name="%s"]/phive:signature/@fingerprint', $alias);
+        foreach ($this->dbFile->query($query) as $fingerprintNode) {
+            if (in_array($fingerprintNode->nodeValue, $fingerprints)) {
+                continue;
+            }
+            $fingerprints[] = $fingerprintNode->nodeValue;
+        }
+        return array_unique($fingerprints);
     }
 
 }

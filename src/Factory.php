@@ -304,16 +304,10 @@ class Factory {
     private function getPharDownloader() {
         return new PharDownloader(
             $this->getFileDownloader(),
-            $this->getSignatureService(),
-            $this->getChecksumService()
+            $this->getGnupgSignatureVerifier(),
+            $this->getChecksumService(),
+            $this->getPharRegistry()
         );
-    }
-
-    /**
-     * @return SignatureService
-     */
-    private function getSignatureService() {
-        return new SignatureService($this->getGnupgSignatureVerifier());
     }
 
     /**
