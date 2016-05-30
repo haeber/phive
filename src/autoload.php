@@ -25,6 +25,8 @@ spl_autoload_register(
                 'phario\\phive\\cli\\output' => '/shared/cli/output/Output.php',
                 'phario\\phive\\cli\\outputfactory' => '/shared/cli/output/OutputFactory.php',
                 'phario\\phive\\cli\\outputlocator' => '/shared/cli/output/OutputLocator.php',
+                'phario\\phive\\cli\\parsedflag' => '/shared/cli/ParsedFlag.php',
+                'phario\\phive\\cli\\parsedoption' => '/shared/cli/ParsedOption.php',
                 'phario\\phive\\cli\\request' => '/shared/cli/Request.php',
                 'phario\\phive\\cli\\runner' => '/shared/cli/Runner.php',
                 'phario\\phive\\commandlocator' => '/commands/CommandLocator.php',
@@ -82,6 +84,8 @@ spl_autoload_register(
                 'phario\\phive\\listcommand' => '/commands/list/ListCommand.php',
                 'phario\\phive\\localsslcertificate' => '/shared/http/LocalSslCertificate.php',
                 'phario\\phive\\nogpgbinaryfoundexception' => '/shared/exceptions/NoGPGBinaryFoundException.php',
+                'phario\\phive\\option' => '/shared/cli/Option.php',
+                'phario\\phive\\optionparser' => '/shared/cli/OptionParser.php',
                 'phario\\phive\\phar' => '/shared/phar/Phar.php',
                 'phario\\phive\\pharalias' => '/shared/phar/PharAlias.php',
                 'phario\\phive\\phardownloader' => '/services/phar/PharDownloader.php',
@@ -145,6 +149,6 @@ spl_autoload_register(
         }
     },
     true,
-    true
+    false
 );
 // @codeCoverageIgnoreEnd

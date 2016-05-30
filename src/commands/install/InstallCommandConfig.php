@@ -95,4 +95,11 @@ class InstallCommandConfig {
         return $this->cliOptions->isSwitch('temporary') || $this->installGlobally();
     }
 
+    public function getAvailableOptions() {
+        return [
+            new Option('global', false, false, 'g'),
+            new Option('temporary', false, false, ''),
+            new Option('target', true, false, 't')
+        ];
+    }
 }

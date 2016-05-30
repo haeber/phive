@@ -1,8 +1,15 @@
 <?php
 namespace PharIo\Phive\Cli;
 
+use PharIo\Phive\OptionParser;
+
 class Options {
 
+    /**
+     * @var OptionParser
+     */
+    private $optionParser;
+    
     /**
      * @var string[]
      */
@@ -19,35 +26,27 @@ class Options {
     private $arguments = [];
 
     /**
+     * @param $optionParser
      * @param string[] $options
      */
-    public function __construct(array $options) {
-        $this->parseOptions($options);
+    public function __construct($optionParser, array $options) {
+        $this->extractArguments($options);
+        foreach ($this->optionParser->parse($options) as $parsedOption) {
+            if ($parsedOption instanceof ParsedFlag) {
+                $this->switches[] = $parsedOption->getName();
+            }
+            if ($parsedOption instanceof ParsedOption) {
+                $this->options[$parsedOption->getName()] = $parsedOption->getValue();
+            }
+        }
     }
 
-    private function parseOptions(array $options) {
-        $skipNext = false;
+    /**
+     * @param array $options
+     */
+    private function extractArguments(array $options) {
         foreach ($options as $idx => $option) {
-            if ($skipNext) {
-                $skipNext = false;
-                continue;
-            }
-            if (strpos($option, '--') === 0) {
-                if (strpos($option, '=') !== false) {
-                    list($key, $value) = explode('=', ltrim($option, '-'));
-                    $this->options[$key] = $value;
-                    continue;
-                }
-                if (isset($options[$idx + 1])) {
-                    $this->options[ltrim($option, '-')] = $options[$idx + 1];
-                    $skipNext = true;
-                } else {
-                    $this->options[ltrim($option, '-')] = true;
-                }
-                continue;
-            }
-            if (strpos($option, '-') === 0) {
-                $this->switches[ltrim($option, '-')] = true;
+            if (preg_match('/^-.*/', $option)) {
                 continue;
             }
             $this->arguments[] = $option;
